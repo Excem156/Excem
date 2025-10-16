@@ -1,91 +1,55 @@
 "use client";
+import React from "react";
 
-import React, { useState } from "react";
-import { getAuth, signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
-import { app } from "../../firebaseConfig"; // adjust path if needed
-
-export default function Login() {
-  const auth = getAuth(app);
-  const provider = new GoogleAuthProvider();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
-
-  const handleLogin = async (e) => {
-    e.preventDefault();
-    try {
-      await signInWithEmailAndPassword(auth, email, password);
-      alert("Login successful!");
-      window.location.href = "/dashboard";
-    } catch (err) {
-      setError(err.message);
-    }
-  };
-
-  const handleGoogleLogin = async () => {
-    try {
-      await signInWithPopup(auth, provider);
-      alert("Google login successful!");
-      window.location.href = "/dashboard";
-    } catch (err) {
-      setError(err.message);
-    }
-  };
-
+export default function Home() {
   return (
-    <div style={{ textAlign: "center", padding: "50px" }}>
-      <h1>Login to Excem 🔐</h1>
-      <form onSubmit={handleLogin} style={{ marginTop: "20px" }}>
-        <input
-          type="email"
-          placeholder="Email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-          style={{ padding: "10px", margin: "5px" }}
-        />
-        <br />
-        <input
-          type="password"
-          placeholder="Password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-          style={{ padding: "10px", margin: "5px" }}
-        />
-        <br />
-        <button
-          type="submit"
+    <div style={{ textAlign: "center", padding: "60px" }}>
+      <h1>Welcome to Excem 🌍</h1>
+      <p>Your all-in-one marketplace for sellers and buyers.</p>
+
+      <div style={{ marginTop: "40px" }}>
+        <a
+          href="/signup"
           style={{
-            padding: "10px 20px",
-            backgroundColor: "#007bff",
+            backgroundColor: "#28a745",
             color: "white",
-            border: "none",
-            margin: "10px",
-            cursor: "pointer",
+            padding: "12px 25px",
+            borderRadius: "8px",
+            textDecoration: "none",
+            marginRight: "15px",
+            fontWeight: "bold",
           }}
         >
-          Login
-        </button>
-      </form>
+          Sign Up
+        </a>
 
-      <button
-        onClick={handleGoogleLogin}
-        style={{
-          padding: "10px 20px",
-          backgroundColor: "#db4437",
-          color: "white",
-          border: "none",
-          cursor: "pointer",
-        }}
-      >
-        Login with Google
-      </button>
+        <a
+          href="/login"
+          style={{
+            backgroundColor: "#007bff",
+            color: "white",
+            padding: "12px 25px",
+            borderRadius: "8px",
+            textDecoration: "none",
+            fontWeight: "bold",
+          }}
+        >
+          Log In
+        </a>
+      </div>
 
-      <p style={{ color: "red", marginTop: "15px" }}>{error}</p>
-      <p>
-        Don’t have an account? <a href="/signup">Sign up</a>
-      </p>
+      <div style={{ marginTop: "30px" }}>
+        <a
+          href="/dashboard"
+          style={{
+            color: "#333",
+            textDecoration: "underline",
+            fontSize: "14px",
+          }}
+        >
+          Go to Dashboard →
+        </a>
+      </div>
     </div>
   );
-  }
+}
