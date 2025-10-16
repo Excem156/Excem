@@ -1,12 +1,18 @@
 "use client";
 
 import React, { useState } from "react";
-import { getAuth, createUserWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
-import { app } from "../../firebaseConfig"; // adjust path if needed
+import {
+  getAuth,
+  createUserWithEmailAndPassword,
+  GoogleAuthProvider,
+  signInWithPopup,
+} from "firebase/auth";
+import { app } from "./firebaseConfig";
 
 export default function Signup() {
   const auth = getAuth(app);
   const provider = new GoogleAuthProvider();
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -35,6 +41,13 @@ export default function Signup() {
   return (
     <div style={{ textAlign: "center", padding: "50px" }}>
       <h1>Create an Excem Account ✨</h1>
+
+      {error && (
+        <p style={{ color: "red", marginTop: "10px" }}>
+          {error}
+        </p>
+      )}
+
       <form onSubmit={handleSignup} style={{ marginTop: "20px" }}>
         <input
           type="email"
@@ -42,18 +55,20 @@ export default function Signup() {
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
-          style={{ padding: "10px", margin: "5px" }}
+          style={{ padding: "10px", margin: "5px", width: "250px" }}
         />
         <br />
+
         <input
           type="password"
           placeholder="Password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           required
-          style={{ padding: "10px", margin: "5px" }}
+          style={{ padding: "10px", margin: "5px", width: "250px" }}
         />
         <br />
+
         <button
           type="submit"
           style={{
@@ -63,6 +78,7 @@ export default function Signup() {
             border: "none",
             margin: "10px",
             cursor: "pointer",
+            borderRadius: "5px",
           }}
         >
           Sign Up
@@ -77,15 +93,11 @@ export default function Signup() {
           color: "white",
           border: "none",
           cursor: "pointer",
+          borderRadius: "5px",
         }}
       >
         Sign Up with Google
       </button>
-
-      <p style={{ color: "red", marginTop: "15px" }}>{error}</p>
-      <p>
-        Already have an account? <a href="/login">Login</a>
-      </p>
     </div>
   );
-            }
+}
