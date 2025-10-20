@@ -1,10 +1,10 @@
 import React from "react";
+import Home from "./Home"; // or wherever your homepage component is
 
 function App() {
   return (
-    <div style={{ textAlign: "center", paddingTop: "50px" }}>
-      <h1>🚀 Welcome to Excem</h1>
-      <p>Your Vercel + Firebase + Vite app is working!</p>
+    <div>
+      <Home />
     </div>
   );
 }
