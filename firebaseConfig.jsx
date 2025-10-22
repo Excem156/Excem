@@ -1,17 +1,24 @@
-// src/firebaseConfig.js (or .jsx)
-
 import { initializeApp } from "firebase/app";
-import { getAuth } from "firebase/auth"; // <--- Add this import
+import { getAuth } from "firebase/auth";
+import { getFirestore } from "firebase/firestore"; // <-- ADDED FIRESTORE
 
 const firebaseConfig = {
-    // ... your keys here ...
+  // IMPORTANT: Replace the placeholders below with your actual Firebase keys
+  apiKey: "YOUR_API_KEY", 
+  authDomain: "YOUR_AUTH_DOMAIN",
+  projectId: "YOUR_PROJECT_ID",
+  storageBucket: "YOUR_STORAGE_BUCKET",
+  messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+  appId: "YOUR_APP_ID",
 };
 
 // Initialize Firebase App
 const app = initializeApp(firebaseConfig);
 
-// Initialize Firebase Auth and export it
-const auth = getAuth(app); // <--- Initialize auth
+// Initialize Firebase services
+const auth = getAuth(app);
+const db = getFirestore(app); // <-- INITIALIZE FIRESTORE
 
-export { auth }; // <--- Export Auth instance 
+// Export all services you will use
+export { auth, db }; // <-- EXPORT BOTH AUTH AND DB
 export default app;
