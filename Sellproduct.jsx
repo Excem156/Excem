@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../contexts/AuthContext'; 
-// import { collection, addDoc } from 'firebase/firestore'; // For future database logic
-// import { db } from '../../firebaseConfig'; 
+import { collection, addDoc } from 'firebase/firestore'; // <-- NEW: Import Firestore functions
+import { db } from '../../firebaseConfig'; // <-- NEW: Import the Firestore instance
 
 function SellProduct() {
   const { currentUser } = useAuth();
@@ -9,36 +9,43 @@ function SellProduct() {
   const [description, setDescription] = useState('');
   const [price, setPrice] = useState('');
   const [message, setMessage] = useState('');
+  const [loading, setLoading] = useState(false); // To prevent double submission
 
   const handleUpload = async (e) => {
     e.preventDefault();
-    if (!currentUser) return;
+    if (!currentUser) {
+        setMessage('Please log in to upload products.');
+        return;
+    }
+    setLoading(true);
+    setMessage('');
 
-    // --- FUTURE: Database Submission Logic ---
-    /*
     try {
-      // 1. Save product data to a 'pending_products' collection
-      await addDoc(collection(db, "pending_products"), {
+      // 1. Save product data to the 'products' collection
+      await addDoc(collection(db, "products"), { 
         sellerId: currentUser.uid,
-        productName,
-        description,
+        sellerEmail: currentUser.email,
+        productName: productName,
+        description: description,
         price: parseFloat(price),
-        status: 'pending', // The critical flag for Admin approval
+        status: 'pending', // The critical flag for Admin review
+        isLive: false,      // Not visible to public store yet
         uploadedAt: new Date(),
       });
-      setMessage('Product uploaded successfully! It is now pending admin review before display.');
+      
+      setMessage('✅ Product uploaded successfully! It is now pending admin review before display.');
+      
+      // Clear the form
       setProductName('');
       setDescription('');
       setPrice('');
-    } catch (error) {
-      setMessage('Error uploading product: ' + error.message);
-    }
-    */
-    
-    // Placeholder message for now:
-    console.log(`Product "${productName}" submitted by ${currentUser.email}`);
-    setMessage('Product uploaded successfully! It is now pending admin review before display.');
 
+    } catch (error) {
+      console.error("Error uploading product:", error);
+      setMessage(`❌ Error uploading product: ${error.message}`);
+    } finally {
+      setLoading(false);
+    }
   };
   
   if (!currentUser) {
@@ -51,22 +58,21 @@ function SellProduct() {
       <p>Upload your product details below. Your product will be visible only after an Admin reviews and approves it.</p>
       
       <form onSubmit={handleUpload}>
-        {/* Input fields for product details */}
         <label>Product Name:</label>
         <input type="text" value={productName} onChange={(e) => setProductName(e.target.value)} required />
         
         <label>Description:</label>
         <textarea value={description} onChange={(e) => setDescription(e.target.value)} required />
         
-        <label>Price:</label>
+        <label>Price ($):</label>
         <input type="number" value={price} onChange={(e) => setPrice(e.target.value)} required />
 
-        <button type="submit" style={{ marginTop: '20px', padding: '10px 20px', backgroundColor: '#4CAF50', color: 'white' }}>
-          Upload Product
+        <button type="submit" disabled={loading} style={{ marginTop: '20px', padding: '10px 20px', backgroundColor: '#4CAF50', color: 'white' }}>
+          {loading ? 'Submitting...' : 'Upload Product'}
         </button>
       </form>
       
-      {message && <p style={{ marginTop: '15px', color: 'green' }}>{message}</p>}
+      {message && <p style={{ marginTop: '15px' }}>{message}</p>}
     </div>
   );
 }
