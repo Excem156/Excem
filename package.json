@@ -1,19 +1,28 @@
 {
-  "name": "excem",
-  "version": "1.0.0",
+  "name": "excem-marketplace",
   "private": true,
+  "version": "0.0.0",
+  "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "lint": "eslint . --ext js,jsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview"
   },
   "dependencies": {
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1",
-    "react-router-dom": "^6.26.2"
+    "firebase": "^10.x.x",  // Use the latest stable version
+    "react": "^18.x.x",      // Use the latest stable version
+    "react-dom": "^18.x.x",   // Use the latest stable version
+    "react-router-dom": "^6.x.x" // Ensure a modern version for routing
   },
   "devDependencies": {
-    "@vitejs/plugin-react": "^4.3.1",
-    "vite": "^5.4.2"
+    "@types/react": "^18.x.x",
+    "@types/react-dom": "^18.x.x",
+    "@vitejs/plugin-react": "^4.x.x", // CRITICAL for JSX resolution
+    "eslint": "^8.x.x",
+    "eslint-plugin-react": "^7.x.x",
+    "eslint-plugin-react-hooks": "^4.x.x",
+    "eslint-plugin-react-refresh": "^0.4.x",
+    "vite": "^5.x.x" // Use the latest stable version
   }
 }
