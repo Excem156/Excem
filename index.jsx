@@ -15,5 +15,4 @@ root.render(
         </CartProvider>
     </AuthProvider>
   </React.StrictMode>,
-);
-resolve "./App.jsx" from "index.jsx"
+);p
