@@ -1,100 +1,151 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
-import RoleSwitcher from '../RoleSwitcher'; 
-import { collection, query, where, getDocs, updateDoc, doc } from 'firebase/firestore'; // <-- NEW: Import more Firestore functions
-import { db } from '../../firebaseConfig'; 
+import { db } from '../../firebaseConfig';
+import { collection, query, where, getDocs, doc, updateDoc } from 'firebase/firestore';
 
 function AdminDashboard() {
-  const { currentUser } = useAuth();
-  const [pendingProducts, setPendingProducts] = useState([]);
-  const [paymentStatus, setPaymentStatus] = useState("Awaiting payment approval list...");
-  const [loading, setLoading] = useState(true);
+    const { currentUser, currentView } = useAuth();
+    const [pendingProducts, setPendingProducts] = useState([]);
+    const [pendingOrders, setPendingOrders] = useState([]); // <-- NEW STATE FOR ORDERS
+    const [loading, setLoading] = useState(true);
 
-  // Function to fetch products pending approval
-  const fetchPendingProducts = async () => {
-    setLoading(true);
-    try {
-      const q = query(collection(db, "products"), where("status", "==", "pending"));
-      const querySnapshot = await getDocs(q);
-      
-      const productsList = querySnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      }));
-      setPendingProducts(productsList);
+    // --- Data Fetching ---
 
-    } catch (error) {
-      console.error("Error fetching pending products:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
+    const fetchPendingData = async () => {
+        setLoading(true);
+        try {
+            // 1. Fetch PENDING PRODUCTS (Approval Queue)
+            const productQuery = query(collection(db, "products"), where("status", "==", "pending"));
+            const productSnapshot = await getDocs(productQuery);
+            const productsList = productSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            setPendingProducts(productsList);
 
-  // Function to approve a product
-  const approveProduct = async (productId) => {
-    try {
-      const productRef = doc(db, "products", productId);
-      await updateDoc(productRef, {
-        status: 'approved',
-        isLive: true, // Make it visible on the public store
-        approvedBy: currentUser.uid,
-        approvedAt: new Date(),
-      });
-      // Refresh the list after approval
-      fetchPendingProducts(); 
-      alert(`Product ${productId} approved and is now live!`);
-    } catch (error) {
-      console.error("Error approving product:", error);
-    }
-  };
+            // 2. Fetch PENDING ORDERS (Payment Queue) <-- NEW FETCH
+            const orderQuery = query(collection(db, "orders"), where("status", "==", "pending_payment"));
+            const orderSnapshot = await getDocs(orderQuery);
+            const ordersList = orderSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            setPendingOrders(ordersList);
 
-  // Function to mark a payment as received (Placeholder)
-  const markPaymentReceived = (sellerId) => {
-    // FUTURE: Implement logic to update a 'payments' collection or user balance
-    setPaymentStatus(`Payment marked received for Seller: ${sellerId}. (Database logic pending)`);
-  };
+        } catch (error) {
+            console.error("Error fetching admin data:", error);
+        } finally {
+            setLoading(false);
+        }
+    };
 
+    useEffect(() => {
+        if (currentView === 'admin') {
+            fetchPendingData();
+        }
+    }, [currentView]);
 
-  // Fetch products when the component mounts
-  useEffect(() => {
-    fetchPendingProducts();
-  }, []);
+    // --- Product Management ---
 
-  return (
-    <div style={{ padding: '20px', backgroundColor: '#fff', minHeight: '100vh' }}>
-      <h1>👑 Admin Dashboard</h1>
-      <RoleSwitcher /> 
-      
-      <p>Welcome, {currentUser?.email}. You have full platform control.</p>
-      
-      <h3 style={{marginTop: '30px'}}>Product Approval Queue ({pendingProducts.length} pending)</h3>
-      <div style={{ border: '1px solid #ccc', padding: '20px', minHeight: '150px' }}>
-        {loading && <p>Loading pending products...</p>}
-        {!loading && pendingProducts.length === 0 && <p>✅ No products pending review.</p>}
+    const handleProductApproval = async (productId, status) => {
+        try {
+            const productRef = doc(db, "products", productId);
+            await updateDoc(productRef, {
+                status: status, // 'approved' or 'disapproved'
+                isLive: status === 'approved' ? true : false,
+            });
+            fetchPendingData(); // Refresh the list
+            alert(`Product ${productId} ${status} successfully.`);
+        } catch (error) {
+            console.error("Error updating product:", error);
+        }
+    };
 
-        {!loading && pendingProducts.map((product) => (
-          <div key={product.id} style={{ borderBottom: '1px dashed #eee', padding: '10px 0', display: 'flex', justifyContent: 'space-between' }}>
-            <div>
-              <strong>{product.productName}</strong> by {product.sellerEmail} (${product.price})
-              <p style={{ fontSize: '0.8em', color: '#666' }}>{product.description}</p>
-            </div>
-            <button 
-              onClick={() => approveProduct(product.id)}
-              style={{ padding: '5px 10px', backgroundColor: 'blue', color: 'white', border: 'none', cursor: 'pointer' }}
-            >
-              Approve
-            </button>
-          </div>
-        ))}
-      </div>
-      
-      <h3 style={{marginTop: '30px'}}>Payment Confirmation</h3>
-      <p>{paymentStatus}</p>
-      <button onClick={() => markPaymentReceived('S987')} style={{ padding: '8px', backgroundColor: 'orange', color: 'white' }}>
-        Mark Test Payment as Received
-      </button>
-    </div>
-  );
+    // --- Order Management ---
+
+    const handlePaymentReceived = async (orderId) => { // <-- NEW FUNCTION
+        if (!window.confirm(`Confirm payment received for Order ID: ${orderId}?`)) return;
+
+        try {
+            const orderRef = doc(db, "orders", orderId);
+            await updateDoc(orderRef, {
+                status: 'payment_received', // Update status
+                // You can add a timestamp here if needed: paymentDate: serverTimestamp(),
+            });
+            fetchPendingData(); // Refresh the list
+            alert(`Order ${orderId} marked as 'Payment Received'. Now ready for shipping.`);
+        } catch (error) {
+            console.error("Error updating order status:", error);
+        }
+    };
+    
+    if (loading) return <div>Loading Admin Dashboard...</div>;
+
+    return (
+        <div style={{ padding: '20px', maxWidth: '1200px', margin: 'auto' }}>
+            <h1>Admin Dashboard</h1>
+            <p>Welcome, Admin! (Viewing UID: {currentUser.uid})</p>
+            
+            {/* ------------------------------------------------------------- */}
+            {/* PAYMENT CONFIRMATION SECTION (NEW) */}
+            {/* ------------------------------------------------------------- */}
+            <h2 style={{ marginTop: '40px', borderBottom: '2px solid #007bff', paddingBottom: '10px' }}>
+                💰 Pending Orders (Payment Verification)
+            </h2>
+            
+            {pendingOrders.length === 0 ? (
+                <p>No orders currently awaiting payment confirmation.</p>
+            ) : (
+                pendingOrders.map(order => (
+                    <div key={order.id} style={{ border: '1px solid #007bff', padding: '15px', marginBottom: '15px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <div>
+                            <strong>Order ID:</strong> {order.id}
+                            <p><strong>Customer:</strong> {order.customerEmail || order.customerId}</p>
+                            <p><strong>Total Amount:</strong> <span style={{ color: 'green', fontWeight: 'bold' }}>${order.totalPrice.toFixed(2)}</span></p>
+                            <p style={{ marginTop: '5px', fontSize: '0.9em' }}>Items: {order.items.map(i => `${i.productName} (x${i.quantity})`).join(', ')}</p>
+                        </div>
+                        <button 
+                            onClick={() => handlePaymentReceived(order.id)}
+                            style={{ padding: '10px 20px', backgroundColor: '#007bff', color: 'white', border: 'none', cursor: 'pointer' }}
+                        >
+                            Payment Received
+                        </button>
+                    </div>
+                ))
+            )}
+            
+            {/* ------------------------------------------------------------- */}
+            {/* PRODUCT APPROVAL SECTION (EXISTING) */}
+            {/* ------------------------------------------------------------- */}
+            <h2 style={{ marginTop: '40px', borderBottom: '2px solid #f0ad4e', paddingBottom: '10px' }}>
+                📦 Pending Product Approvals
+            </h2>
+
+            {pendingProducts.length === 0 ? (
+                <p>No products currently awaiting approval.</p>
+            ) : (
+                pendingProducts.map(product => (
+                    <div key={product.id} style={{ border: '1px solid #ccc', padding: '15px', marginBottom: '15px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <div>
+                            <strong>{product.productName}</strong>
+                            <p>{product.description}</p>
+                            <p>Submitted by: {product.sellerId}</p>
+                        </div>
+                        <div>
+                            <button 
+                                onClick={() => handleProductApproval(product.id, 'approved')}
+                                style={{ padding: '8px 15px', backgroundColor: 'green', color: 'white', marginRight: '10px' }}
+                            >
+                                Approve
+                            </button>
+                            <button 
+                                onClick={() => handleProductApproval(product.id, 'disapproved')}
+                                style={{ padding: '8px 15px', backgroundColor: 'red', color: 'white' }}
+                            >
+                                Disapprove
+                            </button>
+                        </div>
+                    </div>
+                ))
+            )}
+            
+            <p style={{ marginTop: '50px' }}>Current View: <strong>{currentView}</strong></p>
+        </div>
+    );
 }
 
 export default AdminDashboard;
