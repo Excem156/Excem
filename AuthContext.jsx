@@ -1,14 +1,63 @@
-// src/contexts/AuthContext.jsx
+import React, { createContext, useContext, useEffect, useState } from 'react';
+import { auth, db } from '../firebaseConfig'; 
+import { onAuthStateChanged, signOut } from 'firebase/auth'; // Added signOut
+import { doc, getDoc } from 'firebase/firestore';
 
-// ... (Existing imports) ...
-import { signOut } from 'firebase/auth'; // <-- NEW IMPORT
-
-// ... (Existing code for AuthProvider component) ...
+const AuthContext = createContext();
+export const useAuth = () => useContext(AuthContext);
 
 export const AuthProvider = ({ children }) => {
-    // ... (Existing state and useEffect) ...
+    const [currentUser, setCurrentUser] = useState(null);
+    // Simplified roles: only tracking admin status
+    const [userRoles, setUserRoles] = useState({ admin: false }); 
+    const [currentView, setCurrentView] = useState('customer'); // Only customer or admin view now
+    const [loading, setLoading] = useState(true);
 
-    // ADD THIS LOGOUT FUNCTION
+    useEffect(() => {
+        const unsubscribe = onAuthStateChanged(auth, async (user) => {
+            setCurrentUser(user);
+            setUserRoles({ admin: false }); 
+            setLoading(false); 
+            
+            if (user) {
+                const userDocRef = doc(db, "users", user.uid);
+                const userDoc = await getDoc(userDocRef);
+
+                if (userDoc.exists() && userDoc.data().roles) {
+                    const roles = userDoc.data().roles;
+                    
+                    const newRoles = {
+                        admin: roles.admin || false,
+                    };
+                    setUserRoles(newRoles);
+
+                    // Set the initial active view: Admin or Customer
+                    if (newRoles.admin) {
+                        setCurrentView('admin');
+                    } else {
+                        setCurrentView('customer');
+                    }
+                } else {
+                    setCurrentView('customer');
+                }
+            }
+            setLoading(false);
+        });
+
+        return unsubscribe;
+    }, []);
+
+    // Switch view logic simplified: only Admin and Customer
+    const switchView = (role) => {
+        if (role === 'admin' && userRoles.admin) {
+            setCurrentView('admin');
+        } else if (role === 'customer') {
+            setCurrentView('customer');
+        } else {
+            console.warn(`Attempted switch to unauthorized role: ${role}`);
+        }
+    };
+    
     const logout = () => {
         return signOut(auth);
     };
@@ -17,10 +66,9 @@ export const AuthProvider = ({ children }) => {
         currentUser,
         userRoles,
         isAdmin: userRoles.admin,
-        isSeller: userRoles.seller,
         currentView,            
         switchView,             
-        logout, // <-- EXPORT THE NEW FUNCTION
+        logout,
         loading,
     };
 
