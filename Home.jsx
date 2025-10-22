@@ -1,32 +1,55 @@
 import React from 'react';
-// Import any components you will need, like product cards or a header
-// import ProductGrid from '../components/ProductGrid';
-// import AppHeader from '../components/AppHeader';
+import { useAuth } from './contexts/AuthContext';
+import { Link, useNavigate } from 'react-router-dom';
 
 function Home() {
-  return (
-    <div className="home-page-container">
-      {/* This is where your main marketing and product content will go.
-        For a Temu-like app, this should feature deals, categories, and products.
-      */}
+    const { currentUser, logout, isSeller } = useAuth();
+    const navigate = useNavigate();
 
-      <header className="home-header" style={{ textAlign: 'center', padding: '20px 0' }}>
-        <h1>🛍️ Welcome to Excem!</h1>
-        <p>Your destination for the best deals, Shop Like a Billionaire!</p>
-      </header>
-      
-      <main className="product-showcase">
-        {/* Placeholder for your main content area */}
-        <h2>Featured Daily Deals</h2>
-        
-        {/* You will replace this placeholder with actual components */}
-        <div style={{ minHeight: '300px', border: '1px dashed #ccc', margin: '20px' }}>
-            {/* <ProductGrid /> */}
-            <p style={{marginTop: '100px', textAlign: 'center'}}>Loading products...</p>
+    const handleLogout = async () => {
+        try {
+            await logout();
+            navigate('/login');
+        } catch (error) {
+            console.error("Logout failed:", error);
+        }
+    };
+
+    return (
+        <div style={{ textAlign: 'center', marginTop: '50px' }}>
+            <h1>Welcome to Excem!</h1>
+            
+            {currentUser ? (
+                // User is logged in
+                <div>
+                    <p>Logged in as: <strong>{currentUser.email}</strong></p>
+                    
+                    {/* Link for ALL logged-in users to upload a product */}
+                    <Link to="/sell" style={{ margin: '10px', padding: '10px', border: '1px solid blue' }}>
+                        SELL A PRODUCT
+                    </Link>
+
+                    {/* Link for APPROVED sellers to manage their panel */}
+                    {isSeller && (
+                        <Link to="/seller" style={{ margin: '10px', padding: '10px', border: '1px solid green' }}>
+                            GO TO SELLER PANEL
+                        </Link>
+                    )}
+
+                    <button onClick={handleLogout} style={{ margin: '10px', padding: '10px', backgroundColor: 'red', color: 'white' }}>
+                        Logout
+                    </button>
+                </div>
+            ) : (
+                // User is NOT logged in
+                <div>
+                    <p>Please log in to browse and sell.</p>
+                    <Link to="/login" style={{ margin: '10px' }}>Login</Link> | 
+                    <Link to="/signup" style={{ margin: '10px' }}>Signup</Link>
+                </div>
+            )}
         </div>
-      </main>
-    </div>
-  );
+    );
 }
 
 export default Home;
