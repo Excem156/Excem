@@ -1,16 +1,12 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-// Make sure this path correctly points to your firebaseConfig file
+// Ensure this path correctly points to your firebaseConfig file
 import { auth, db } from '../firebaseConfig'; 
 import { onAuthStateChanged } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
 
-// 1. Create the Context object
 const AuthContext = createContext();
-
-// 2. Custom hook to easily use the context
 export const useAuth = () => useContext(AuthContext);
 
-// 3. Provider component that manages state and logic
 export const AuthProvider = ({ children }) => {
     const [currentUser, setCurrentUser] = useState(null);
     const [userRoles, setUserRoles] = useState({ admin: false, seller: false });
@@ -20,11 +16,11 @@ export const AuthProvider = ({ children }) => {
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, async (user) => {
             setCurrentUser(user);
-            setUserRoles({ admin: false, seller: false }); // Reset roles on status change
+            setUserRoles({ admin: false, seller: false }); 
+            setLoading(false); // Assume done if no user
             
             if (user) {
                 // Fetch the user's custom roles from the Firestore 'users' collection
-                // Assumes document ID is the user's UID
                 const userDocRef = doc(db, "users", user.uid);
                 const userDoc = await getDoc(userDocRef);
 
@@ -50,8 +46,7 @@ export const AuthProvider = ({ children }) => {
             setLoading(false);
         });
 
-        // Cleanup subscription on component unmount
-        return unsubscribe; 
+        return unsubscribe; // Cleanup subscription
     }, []);
 
     // Function to allow the user to switch their active view (called by RoleSwitcher)
@@ -72,14 +67,13 @@ export const AuthProvider = ({ children }) => {
         userRoles,
         isAdmin: userRoles.admin,
         isSeller: userRoles.seller,
-        currentView,            // The currently active view ('admin', 'seller', or 'customer')
-        switchView,             // Function to change the active view
+        currentView,            
+        switchView,             
         loading,
     };
 
     return (
         <AuthContext.Provider value={value}>
-            {/* Only render children once loading is complete */}
             {!loading && children}
         </AuthContext.Provider>
     );
