@@ -1,25 +1,23 @@
 import React from 'react';
-import { useAuth } from '../contexts/AuthContext'; // Path depends on where you put AuthContext.jsx
+import { useAuth } from '../contexts/AuthContext'; 
 
 function RoleSwitcher() {
-  // Pull current user roles and the function to change the view
-  const { userRoles, currentView, switchView, currentUser } = useAuth();
+  const { isAdmin, currentView, switchView, currentUser } = useAuth();
 
-  // Only show the switcher if the user is logged in AND has more than one role option
-  if (!currentUser || (!userRoles.admin && !userRoles.seller)) {
+  // Only show the switcher if the user is logged in AND is an Admin
+  if (!currentUser || !isAdmin) {
     return null;
   }
   
-  // Array of available role views for this user
+  // Array of available role views for this user (Admin + Customer)
   const availableViews = [
     { name: 'Customer Store', role: 'customer' },
-    userRoles.seller && { name: 'Seller Panel', role: 'seller' },
-    userRoles.admin && { name: 'Admin Dashboard', role: 'admin' },
-  ].filter(Boolean); // Filter out the false values (roles the user doesn't have)
+    { name: 'Admin Dashboard', role: 'admin' },
+  ];
 
   return (
     <div style={{ 
-      position: 'absolute', // Position to the top right
+      position: 'absolute', 
       top: '10px', 
       right: '10px', 
       padding: '8px', 
@@ -28,7 +26,7 @@ function RoleSwitcher() {
       borderRadius: '5px',
       display: 'flex', 
       gap: '10px',
-      zIndex: 1000 // Ensure it's above other content
+      zIndex: 1000 
     }}>
       <strong>Switch View:</strong>
       
