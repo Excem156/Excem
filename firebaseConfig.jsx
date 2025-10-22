@@ -1,14 +1,17 @@
+// src/firebaseConfig.js (or .jsx)
+
 import { initializeApp } from "firebase/app";
+import { getAuth } from "firebase/auth"; // <--- Add this import
 
 const firebaseConfig = {
-  apiKey: "AIzaSyAEsJLeMuz3JMS4L9rbjcnNK7S1nXzigqc",
-  authDomain: "excem-ce973.firebaseapp.com",
-  projectId: "excem-ce973",
-  storageBucket: "excem-ce973.firebasestorage.app",
-  messagingSenderId: "411960390993",
-  appId: "1:411960390993:web:7c702ff2cdcb8b70da4f70"
+    // ... your keys here ...
 };
 
+// Initialize Firebase App
 const app = initializeApp(firebaseConfig);
 
+// Initialize Firebase Auth and export it
+const auth = getAuth(app); // <--- Initialize auth
+
+export { auth }; // <--- Export Auth instance 
 export default app;
