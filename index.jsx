@@ -1,15 +1,18 @@
+// src/index.jsx
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App.jsx';
-// Ensure this path is correct for your AuthContext file
 import { AuthProvider } from './contexts/AuthContext'; 
+import { CartProvider } from './contexts/CartContext'; // <-- NEW IMPORT
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 
 root.render(
   <React.StrictMode>
-    <AuthProvider> {/* <-- WRAPPER ADDED */}
-      <App />
+    <AuthProvider>
+        <CartProvider> {/* <-- NEW WRAPPER */}
+            <App />
+        </CartProvider>
     </AuthProvider>
   </React.StrictMode>,
 );
