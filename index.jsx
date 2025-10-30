@@ -16,3 +16,4 @@ root.render(
     </AuthProvider>
   </React.StrictMode>,
 );p
+resolve "./App.jsx" from "index.jsx"
